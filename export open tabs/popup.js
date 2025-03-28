@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const exportBtn = document.getElementById("exportBtn");
 
     chrome.runtime.sendMessage({ action: "getTabGroups" }, (groups) => {
+        console.log(groups);
         if (!groups.length) {
             groupsDiv.innerHTML = "<p>No hay grupos de pestañas.</p>";
             return;
