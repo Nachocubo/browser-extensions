@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "Importar Grupos de Pestañas",
+    "version": "1.0",
+    "description": "Abre grupos de pestañas desde un JSON predefinido.",
+    "permissions": ["tabs"],
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
