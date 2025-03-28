@@ -20,6 +20,7 @@ const groups = {
     ]
 };
 
+// Abre las pestañas en sus respectivos grupos
 function openGroupedTabs() {
     Object.entries(groups).forEach(([groupName, urls]) => {
         urls.forEach((url, index) => {
@@ -28,6 +29,21 @@ function openGroupedTabs() {
     });
 }
 
+// Muestra los grupos y URLs en un listado HTML
 document.addEventListener("DOMContentLoaded", function() {
+    const ul = document.querySelector('ul');  // La lista en HTML
+    Object.entries(groups).forEach(([groupName, urls]) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${groupName}</strong><ul>`;
+        
+        urls.forEach((url) => {
+            li.innerHTML += `<li><a href="${url}" target="_blank">${url}</a></li>`;
+        });
+        
+        li.innerHTML += '</ul>';
+        ul.appendChild(li);
+    });
+
+    // Escucha el clic en el botón para abrir las pestañas
     document.getElementById("openTabs").addEventListener("click", openGroupedTabs);
 });
