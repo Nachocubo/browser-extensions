@@ -1,49 +1,102 @@
-const groups = {
-    "MAHOU PROD (blue)": [
-        "https://acceso.mahou-sanmiguel.com/oauth2/v1/authorize?client_id=okta.2b1959c8-bcc0-56eb-a589-cfcfb7422f26&code_challenge=QgYs2Nl-HX7Iek7dAeNgBiDy8rRtg8rGMHTyuRiu8O8&code_challenge_method=S256&nonce=JHaIRCcuxsN5Fi0iTAyswRCQVMSVUiqULXq169tQ6HqBcy35eaGuhBPaIpeTKHw7&redirect_uri=https%3A%2F%2Facceso.mahou-sanmiguel.com%2Fenduser%2Fcallback&response_type=code&state=3oC9Dc1O8eqYaFOXbeayGPS5rTiiqOl4gKafVxPsUSppVtUT4rSvR86jFuUWggLP&scope=openid%20profile%20email%20okta.users.read.self%20okta.users.manage.self%20okta.internal.enduser.read%20okta.internal.enduser.manage%20okta.enduser.dashboard.read%20okta.enduser.dashboard.manage%20okta.myAccount.sessions.manage",
-        "https://docs.google.com/document/d/1eHwBI_c6iz1rtRWrddsBmtdI2G1GmQ4wbeBjpaHVQz8/edit?pli=1&tab=t.0#heading=h.v1cxiswljdo6"
-    ],
-    "ATLAS (grey)": [
-        "https://mail.google.com/mail/u/0/#inbox",
-        "https://app.sesametime.com/employee/portal",
-        "https://timekeeper.atlascloud.es/timesheet?type=week&start=2025-03-24&end=2025-03-30"
-    ],
-    "FOF (green)": [
-        "https://focusonforce.com/certification-courses/",
-        "https://focusonforce.com/exams/data-and-analytics-management-objectives-3-4-5-admin/"
-    ],
-    "MAHOU UAT (yellow)": [
-        "https://mahousanmiguel--full.sandbox.my.salesforce.com/secur/forgotpassword.jsp?locale=es"
-    ],
-    "MAHOU DEV (red)": [
-        "https://mahousanmiguel--dev.sandbox.my.site.com/Acceso?startURL=%2FUniversoMahou%2FMHInicio%3Flogin%3Dtrue"
-    ]
-};
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("openTabs").addEventListener("click", function () {
+        let groups = {};
+        const textarea = document.getElementsByTagName('textarea')[0];
 
-// Abre las pestañas en sus respectivos grupos
-function openGroupedTabs() {
-    Object.entries(groups).forEach(([groupName, urls]) => {
-        urls.forEach((url, index) => {
-            chrome.tabs.create({ url, active: index === 0 });
+        if (!textarea.value.trim()) {
+            alert("Por favor, ingrese un texto válido en el textarea.");
+            return;
+        }
+
+        // Procesar el texto en grupos
+        const tabs = textarea.value
+            .split('###')
+            .map(s => s.trim())
+            .filter(s => s !== "");
+
+        tabs.forEach((tab) => {
+            const nameMatch = tab.match(/[A-Z]+(\s[A-Z]+)*/);
+            const colorMatch = tab.match(/\(\w+\)/);
+            const urlMatch = tab.split(/\(\w+\)/)[1]?.trim(); // Eliminar color y obtener URL
+
+            if (nameMatch && colorMatch && urlMatch) {
+                const groupName = nameMatch[0];
+                const color = colorMatch[0].replace(/\(|\)/g, ''); // Remover paréntesis
+                const url = urlMatch;
+
+                // Si el grupo no existe, crearlo
+                if (!groups[groupName]) {
+                    groups[groupName] = { color, urls: [] };
+                }
+
+                // Agregar URL al grupo
+                groups[groupName].urls.push(url);
+            }
+        });
+
+        // Mostrar grupos en la lista UL
+        const ul = document.querySelector('ul');
+        ul.innerHTML = '';
+
+        Object.entries(groups).forEach(([groupName, data]) => {
+            const li = document.createElement('li');
+            const strong = document.createElement('strong');
+            const subul = document.createElement('ul');
+            strong.innerText = `${groupName} (${data.color})`;
+            li.appendChild(strong);
+
+            data.urls.forEach((url) => {
+                let nuevos = url.split("- [");
+                nuevos.shift();
+
+                nuevos.forEach((link) => {
+                    let links = link.split("](");
+                    if (links.length === 2) {
+                        let cleanUrl = links[1].replace(")", ""); // Eliminar paréntesis final
+
+                        const subli = document.createElement('li');
+                        const suba = document.createElement('a');
+                        suba.href = cleanUrl;
+                        suba.innerText = links[0];
+                        subli.appendChild(suba);
+                        subul.appendChild(subli);
+                    }
+                });
+            });
+            li.appendChild(subul);
+            ul.appendChild(li);
+        });
+
+        // Abrir pestañas agrupadas
+        Object.entries(groups).forEach(([groupName, data]) => {
+            let tabIds = []; // Guardar IDs de pestañas para agruparlas
+            
+            data.urls.forEach((url, index) => {
+                let nuevos = url.split("- [");
+                nuevos.shift();
+                
+                nuevos.forEach((link) => {
+                    let links = link.split("](");
+                    if (links.length === 2) {
+                        let cleanUrl = links[1].replace(")", "");
+                        
+                        chrome.tabs.create({ url: cleanUrl, active: index === 0 }, (tab) => {
+                            tabIds.push(tab.id);
+                            
+                            // Si ya se crearon todas las pestañas, agruparlas
+                            if (tabIds.length === data.urls.length) {
+                                chrome.tabs.group({ tabIds }, (groupId) => {
+                                    chrome.tabGroups.update(groupId, {
+                                        collapsed: true,
+                                        title: groupName,
+                                        color: data.color.toLowerCase()
+                                    });
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         });
     });
-}
-
-// Muestra los grupos y URLs en un listado HTML
-document.addEventListener("DOMContentLoaded", function() {
-    const ul = document.querySelector('ul');  // La lista en HTML
-    Object.entries(groups).forEach(([groupName, urls]) => {
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${groupName}</strong><ul>`;
-        
-        urls.forEach((url) => {
-            li.innerHTML += `<li><a href="${url}" target="_blank">${url}</a></li>`;
-        });
-        
-        li.innerHTML += '</ul>';
-        ul.appendChild(li);
-    });
-
-    // Escucha el clic en el botón para abrir las pestañas
-    document.getElementById("openTabs").addEventListener("click", openGroupedTabs);
 });
