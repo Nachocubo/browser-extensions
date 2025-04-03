@@ -1,5 +1,5 @@
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("openTabs").addEventListener("click", function () {
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("openTabs").addEventListener("click", () => {
         let groups = {};
         const textarea = document.getElementsByTagName('textarea')[0];
 
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 nuevos.forEach((link) => {
                     let links = link.split("](");
                     if (links.length === 2) {
-                        let cleanUrl = links[1].replace(")", ""); // Eliminar paréntesis final
+                        let cleanUrl = links[1].replace(")", "");
 
                         const subli = document.createElement('li');
                         const suba = document.createElement('a');
@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             // Si ya se crearon todas las pestañas, agruparlas
                             if (tabIds.length === data.urls.length) {
                                 chrome.tabs.group({ tabIds }, (groupId) => {
+                                    chrome.runtime.sendMessage({ action: "log", array: groupId, tabIds: tabIds });
                                     chrome.tabGroups.update(groupId, {
                                         collapsed: true,
                                         title: groupName,

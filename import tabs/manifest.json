@@ -2,8 +2,14 @@
     "manifest_version": 3,
     "name": "Importar Grupos de Pestañas",
     "version": "1.0",
-    "description": "Abre grupos de pestañas desde un JSON predefinido.",
-    "permissions": ["tabs"],
+    "description": "Abre grupos de pestañas desde un texto por textarea.",
+    "permissions": [
+        "tabs",
+        "tabGroups"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
     "action": {
         "default_popup": "popup.html"
     }
