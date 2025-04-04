@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Abrir pestañas agrupadas
         Object.entries(groups).forEach(([groupName, data]) => {
-            let tabIds = []; // Guardar IDs de pestañas para agruparlas
+            let tabIds = [];
             
             data.urls.forEach((url, index) => {
                 let nuevos = url.split("- [");
@@ -84,7 +84,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             tabIds.push(tab.id);
                             
                             // Si ya se crearon todas las pestañas, agruparlas
-                            if (tabIds.length === data.urls.length) {
+                            chrome.runtime.sendMessage({ action: "log", msg: nuevos});
+                            if (tabIds.length === nuevos.length) {
                                 chrome.tabs.group({ tabIds }, (groupId) => {
                                     chrome.runtime.sendMessage({ action: "log", array: groupId, tabIds: tabIds });
                                     chrome.tabGroups.update(groupId, {
